@@ -1,0 +1,85 @@
+<!-- templates/chat.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - TimeBomb</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .top-ribbon { background-color: #333; color: white; text-align: center; padding: 1rem; font-size: 1.5rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .nav-button { background-color: #f0ad4e; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 1rem; }
+        .chat-container { max-width: 800px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; height: 70vh; overflow-y: scroll; }
+        .messages { list-style-type: none; padding: 0; }
+        .message-box { display: flex; max-width: 800px; margin: 10px auto; }
+        #message-input { flex-grow: 1; padding: 10px; }
+        #send-btn { padding: 10px; }
+        .message strong { color: #007bff; }
+        .message.system { color: #888; font-style: italic; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="top-ribbon">
+        <span>Room: {{ room }} | Name: {{ name }}</span>
+        <a href="/" class="nav-button">Back to Inbox</a>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+        <ul class="messages" id="messages">
+            <!-- Load existing messages -->
+            {% for msg in messages %}
+                <li class="message"><strong>{{ msg.name }}:</strong> {{ msg.message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="message-box">
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button id="send-btn">Send</button>
+    </div>
+
+    <script type="text/javascript">
+        // Connect to the WebSocket server
+        const socket = io();
+
+        // Auto-scroll to the latest message
+        const messageContainer = document.getElementById("chat-container");
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                socket.emit('message', { data: message });
+                messageInput.value = '';
+            }
+        }
+        
+        document.getElementById('send-btn').onclick = sendMessage;
+        document.getElementById('message-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Listen for incoming messages
+        socket.on('message', function(data) {
+            const ul = document.getElementById('messages');
+            const li = document.createElement('li');
+            li.classList.add('message');
+
+            if (data.message.includes('has entered') || data.message.includes('has left')) {
+                li.classList.add('system');
+                li.innerHTML = `<span>${data.name} ${data.message}</span>`;
+            } else {
+                li.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
+            }
+            
+            ul.appendChild(li);
+            // Auto-scroll on new message
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+    </script>
+</body>
+</html>
