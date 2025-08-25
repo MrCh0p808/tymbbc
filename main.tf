@@ -89,7 +89,7 @@ resource "aws_security_group" "tymbbc_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]  
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]  
 }
 
   egress {
@@ -117,9 +117,9 @@ resource "aws_instance" "tymbbc_server" {
               yum update -y
               yum install -y python3-pip git
               pip3 install flask flask-socketio gunicorn
-              git clone https://github.com/MrCh0p808/tymbbc.git /home/ec2-user/tymbbc_app # Replace with your repo URL
-              cd /home/ec2-user/tym_bbc
-              gunicorn --bind 0.0.0.0:80 app:app
+              git clone https://github.com/MrCh0p808/tymbbc.git /home/ec2-user/tymbbc_app
+              cd /home/ec2-user/tymbbc_app
+              nohup gunicorn --bind 0.0.0.0:80 app:app &
               EOF
 
   tags = {
