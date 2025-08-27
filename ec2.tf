@@ -4,7 +4,7 @@ resource "aws_instance" "tymbbc_server" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.tymbbc_subnet.id
   vpc_security_group_ids = [aws_security_group.tymbbc_sg.id]
-
+  key_name      = aws_key_pair.tymbbc_key.key_name
   # User data script to install and run the application
   user_data = <<-EOF
               #!/bin/bash
